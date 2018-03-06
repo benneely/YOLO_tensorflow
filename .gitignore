@@ -8,3 +8,4 @@ data_parsing/voc_utils.egg-info
 network/weights/YOLO_small.ckpt
 .DS_Store
 .idea
+playground/
