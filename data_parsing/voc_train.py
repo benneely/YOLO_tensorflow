@@ -1,4 +1,4 @@
-import voc_utils as voc
+import data_parsing.voc_utils as voc
 import math
 
 grid_size = 7

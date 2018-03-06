@@ -6,3 +6,5 @@ data_parsing/build
 data_parsing/dist
 data_parsing/voc_utils.egg-info
 network/weights/YOLO_small.ckpt
+.DS_Store
+.idea

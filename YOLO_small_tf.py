@@ -90,7 +90,7 @@ class YOLO_TF:
                 self.filewrite_img = True
 
     def build_networks(self):
-        if self.disp_console: print "Building YOLO_small graph..."
+        if self.disp_console: print("Building YOLO_small graph...")
         self.x = tf.placeholder('float32', [None, 448, 448, 3])
         self.conv_1 = self.conv_layer(1, self.x, 64, 7, 2)
         self.pool_2 = self.pooling_layer(2, self.conv_1, 2, 2)
@@ -128,7 +128,7 @@ class YOLO_TF:
         self.sess.run(tf.global_variables_initializer())
         self.saver = tf.train.Saver()
         self.saver.restore(self.sess, self.weights_file)
-        if self.disp_console: print "Loading complete!" + '\n'
+        if self.disp_console: print("Loading complete!" + '\n')
 
     def conv_layer(self, idx, inputs, filters, size, stride, trainable=False):
         channels = inputs.get_shape()[3]
@@ -142,13 +142,13 @@ class YOLO_TF:
         conv = tf.nn.conv2d(inputs_pad, weight, strides=[1, stride, stride, 1], padding='VALID',
                             name=str(idx) + '_conv')
         conv_biased = tf.add(conv, biases, name=str(idx) + '_conv_biased')
-        if self.disp_console: print '    Layer  %d : Type = Conv, Size = %d * %d, Stride = %d, Filters = %d, Input channels = %d' % (
-        idx, size, size, stride, filters, int(channels))
-        return tf.maximum(tf.mul(self.alpha, conv_biased), conv_biased, name=str(idx) + '_leaky_relu')
+        if self.disp_console: print('    Layer  %d : Type = Conv, Size = %d * %d, Stride = %d, Filters = %d, Input channels = %d' % (
+        idx, size, size, stride, filters, int(channels)))
+        return tf.maximum(tf.multiply(self.alpha, conv_biased), conv_biased, name=str(idx) + '_leaky_relu')
 
     def pooling_layer(self, idx, inputs, size, stride):
-        if self.disp_console: print '    Layer  %d : Type = Pool, Size = %d * %d, Stride = %d' % (
-        idx, size, size, stride)
+        if self.disp_console: print('    Layer  %d : Type = Pool, Size = %d * %d, Stride = %d' % (
+        idx, size, size, stride))
         return tf.nn.max_pool(inputs, ksize=[1, size, size, 1], strides=[1, stride, stride, 1], padding='SAME',
                               name=str(idx) + '_pool')
 
@@ -164,14 +164,14 @@ class YOLO_TF:
         #weight = tf.Variable(tf.truncated_normal([dim, hiddens], stddev=0.1), trainable=trainable)
         weight = tf.Variable(tf.zeros([dim, hiddens]), trainable=trainable)
         biases = tf.Variable(tf.constant(0.1, shape=[hiddens]), trainable=trainable)
-        if self.disp_console: print '    Layer  %d : Type = Full, Hidden = %d, Input dimension = %d, Flat = %d, Activation = %d' % (
-        idx, hiddens, int(dim), int(flat), 1 - int(linear))
+        if self.disp_console: print('    Layer  %d : Type = Full, Hidden = %d, Input dimension = %d, Flat = %d, Activation = %d' % (
+        idx, hiddens, int(dim), int(flat), 1 - int(linear)))
         if linear: return tf.add(tf.matmul(inputs_processed, weight), biases, name=str(idx) + '_fc')
         ip = tf.add(tf.matmul(inputs_processed, weight), biases)
-        return tf.maximum(tf.mul(self.alpha, ip), ip, name=str(idx) + '_fc')
+        return tf.maximum(tf.multiply(self.alpha, ip), ip, name=str(idx) + '_fc')
 
     def dropout(self, idx, inputs):
-        if self.disp_console: print '    Layer  %d : Type = DropOut' % (idx)
+        if self.disp_console: print('    Layer  %d : Type = DropOut' % (idx))
         return tf.nn.dropout(inputs, keep_prob=self.keep_prob)
 
     def detect_from_cvmat(self, img):
@@ -186,17 +186,17 @@ class YOLO_TF:
         net_output = self.sess.run(self.fc_32, feed_dict=in_dict)
         self.result = self.interpret_output(net_output[0])
         strtime = str(time.time() - s)
-        if self.disp_console: print 'Elapsed time : ' + strtime + ' secs' + '\n'
+        if self.disp_console: print('Elapsed time : ' + strtime + ' secs' + '\n')
 
     def detect_from_file_video(self, filename):
-        if self.disp_console: print 'Detect from ' + filename
+        if self.disp_console: print('Detect from ' + filename)
         input = cv2.VideoCapture(filename)
         while not input.isOpened():
             input = cv2.VideoCapture(filename)
             cv2.waitKey(1000)
-            print "Wait for the header"
+            print("Wait for the header")
         if self.filewrite_img:
-            print input.get(cv2.CAP_PROP_FOURCC)
+            print(input.get(cv2.CAP_PROP_FOURCC))
             self.writter = cv2.VideoWriter(self.tofile_img,
                                            int(input.get(cv2.CAP_PROP_FOURCC)),
                                            int(input.get(cv2.CAP_PROP_FPS)),
@@ -207,7 +207,7 @@ class YOLO_TF:
                                                [input.get(cv2.CAP_PROP_FRAME_WIDTH), input.get(cv2.CAP_PROP_FRAME_HEIGHT),
                                                 True])
                 cv2.waitKey(1000)
-                print "Wait for the header Writter"
+                print("Wait for the header Writter")
         pos_frame = input.get(cv2.CAP_PROP_POS_FRAMES)
         while True:
             flag, frame = input.read()
@@ -215,13 +215,13 @@ class YOLO_TF:
                 # The frame is ready and already captured
                 cv2.imshow('video', frame)
                 pos_frame = input.get(cv2.CAP_PROP_POS_FRAMES)
-                print str(pos_frame) + " frames"
+                print(str(pos_frame) + " frames")
                 self.detect_from_cvmat(frame)
                 self.show_results(frame, self.result)
             else:
                 # The next frame is not ready, so we try to read it again
                 input.set(cv2.CAP_PROP_POS_FRAMES, pos_frame - 1)
-                print "frame is not ready"
+                print("frame is not ready")
                 # It is better to wait for a while for the next frame to be ready
                 cv2.waitKey(1000)
             if cv2.waitKey(10) == 27:
@@ -236,7 +236,7 @@ class YOLO_TF:
 
 
     def detect_from_file(self, filename):
-        if self.disp_console: print 'Detect from ' + filename
+        if self.disp_console: print('Detect from ' + filename)
         img = cv2.imread(filename)
         self.detect_from_cvmat(img)
         self.show_results(img, self.result)
@@ -302,9 +302,9 @@ class YOLO_TF:
             y = int(results[i][2])
             w = int(results[i][3]) // 2
             h = int(results[i][4]) // 2
-            if self.disp_console: print '    class : ' + results[i][0] + ' , [x,y,w,h]=[' + str(x) + ',' + str(
+            if self.disp_console: print('    class : ' + results[i][0] + ' , [x,y,w,h]=[' + str(x) + ',' + str(
                 y) + ',' + str(int(results[i][3])) + ',' + str(int(results[i][4])) + '], Confidence = ' + str(
-                results[i][5])
+                results[i][5]))
             if self.filewrite_img or self.imshow:
                 cv2.rectangle(img_cp, (x - w, y - h), (x + w, y + h), (0, 255, 0), 2)
                 cv2.rectangle(img_cp, (x - w, y - h - 20), (x + w, y - h), (125, 125, 125), -1)
@@ -314,7 +314,7 @@ class YOLO_TF:
                 ftxt.write(results[i][0] + ',' + str(x) + ',' + str(y) + ',' + str(w) + ',' + str(h) + ',' + str(
                     results[i][5]) + '\n')
         if self.filewrite_img:
-            if self.disp_console: print '    image file writed : ' + self.tofile_img
+            if self.disp_console: print('    image file writed : ' + self.tofile_img)
             if self.video:
                 self.writter.write(img_cp)
             else:
@@ -323,7 +323,7 @@ class YOLO_TF:
             cv2.imshow('YOLO_small detection', img_cp)
             cv2.waitKey(1)
         if self.filewrite_txt:
-            if self.disp_console: print '    txt file writed : ' + self.tofile_txt
+            if self.disp_console: print('    txt file writed : ' + self.tofile_txt)
             ftxt.close()
 
     def iou(self, box1, box2):
@@ -364,19 +364,19 @@ class YOLO_TF:
         boxes3 = boxes[:,:, :, :, 3]
 
         # loss funtion
-        self.subX = tf.sub(boxes0, self.x_)
-        self.subY = tf.sub(boxes1, self.y_)
-        self.subW = tf.sub(tf.sqrt(tf.abs(boxes2)), tf.sqrt(self.w_))
-        self.subH = tf.sub(tf.sqrt(tf.abs(boxes3)), tf.sqrt(self.h_))
-        self.subC = tf.sub(scales, self.C_)
-        self.subP = tf.sub(class_probs, self.p_)
-        self.lossX=tf.mul(self.lambdacoord,tf.reduce_sum(tf.mul(self.obj,tf.mul(self.subX, self.subX)),axis=[1,2,3]))
-        self.lossY=tf.mul(self.lambdacoord, tf.reduce_sum(tf.mul(self.obj, tf.mul(self.subY, self.subY)),axis=[1,2,3]))
-        self.lossW=tf.mul(self.lambdacoord, tf.reduce_sum(tf.mul(self.obj, tf.mul(self.subW, self.subW)),axis=[1,2,3]))
-        self.lossH=tf.mul(self.lambdacoord, tf.reduce_sum(tf.mul(self.obj, tf.mul(self.subH, self.subH)),axis=[1,2,3]))
-        self.lossCObj=tf.reduce_sum(tf.mul(self.obj, tf.mul(self.subC, self.subC)),axis=[1,2,3])
-        self.lossCNobj=tf.mul(self.lambdanoobj, tf.reduce_sum(tf.mul(self.noobj, tf.mul(self.subC, self.subC)),axis=[1,2,3]))
-        self.lossP=tf.reduce_sum(tf.mul(self.objI,tf.reduce_sum(tf.mul(self.subP, self.subP), axis=3)) ,axis=[1,2])
+        self.subX = tf.subtract(boxes0, self.x_)
+        self.subY = tf.subtract(boxes1, self.y_)
+        self.subW = tf.subtract(tf.sqrt(tf.abs(boxes2)), tf.sqrt(self.w_))
+        self.subH = tf.subtract(tf.sqrt(tf.abs(boxes3)), tf.sqrt(self.h_))
+        self.subC = tf.subtract(scales, self.C_)
+        self.subP = tf.subtract(class_probs, self.p_)
+        self.lossX=tf.multiply(self.lambdacoord,tf.reduce_sum(tf.multiply(self.obj,tf.multiply(self.subX, self.subX)),axis=[1,2,3]))
+        self.lossY=tf.multiply(self.lambdacoord, tf.reduce_sum(tf.multiply(self.obj, tf.multiply(self.subY, self.subY)),axis=[1,2,3]))
+        self.lossW=tf.multiply(self.lambdacoord, tf.reduce_sum(tf.multiply(self.obj, tf.multiply(self.subW, self.subW)),axis=[1,2,3]))
+        self.lossH=tf.multiply(self.lambdacoord, tf.reduce_sum(tf.multiply(self.obj, tf.multiply(self.subH, self.subH)),axis=[1,2,3]))
+        self.lossCObj=tf.reduce_sum(tf.multiply(self.obj, tf.multiply(self.subC, self.subC)),axis=[1,2,3])
+        self.lossCNobj=tf.multiply(self.lambdanoobj, tf.reduce_sum(tf.multiply(self.noobj, tf.multiply(self.subC, self.subC)),axis=[1,2,3]))
+        self.lossP=tf.reduce_sum(tf.multiply(self.objI,tf.reduce_sum(tf.multiply(self.subP, self.subP), axis=3)) ,axis=[1,2])
         self.loss = tf.add_n((self.lossX,self.lossY,self.lossW,self.lossH,self.lossCObj,self.lossCNobj,self.lossP))
         self.loss = tf.reduce_mean(self.loss)
 

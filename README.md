@@ -38,3 +38,12 @@ Put the 'YOLO_small.ckpt' in the 'weight' folder of downloaded code.
 
 # License
 Refeer to the LICENSE files of both *data_parsing* and *network*.
+
+
+```
+python YOLO_small_tf.py \
+-fromfile "network/test/person.jpg" \
+-tofile_img "network/test/person_complete.jpg"
+
+
+```
